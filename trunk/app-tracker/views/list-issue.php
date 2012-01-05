@@ -10,8 +10,18 @@
 <div id='list-content-wrapper'>
     
     <div id='issue-search'>
+        <?php if ( $this->session->userdata('id') != false ) : ?>
         <a href="<?php echo site_url('bugs/create'); ?>" rel="bugs/create" class="button-link" id="new-issue">New Issue</a>
+        <?php endif; ?>
+        <div class='search-container flt-right'>
+        <?php echo form_open('bugs/search/'); ?>
+        <input type='text' name='q'  placeholder="Search..." />
+        <input type='submit' class='button-link' value='Search' />
+        <?php form_close(); ?>
+        </div>
+        <div class='clr'></div>
     </div>
+    
     
     <div id='grid-container'>
         <table id="issue-grid">
@@ -29,14 +39,14 @@
             <tbody>
                 <?php $row = 0 ; ?>
                 <?php foreach( $issues as $issue ) : ?>
-                <tr class="<?php echo ( $row % 2 ) ? 'even' : 'odd'; ?>">
+                <tr id='list-<?php echo $issue['id']; ?>' class="<?php echo ( $row % 2 ) ? 'even' : 'odd'; ?>">
                     <td><a href="<?php echo site_url('bugs/issue/'.$issue['id'].'/'.$currentpage); ?>" rel="<?php echo 'bugs/issue/'.$issue['id'].'/'.$currentpage; ?>" class="button-link-issue"><?php echo $issue['id']; ?></a></td>
                     <td><?php echo $issue['type']; ?></td>
                     <td><?php echo $issue['summary']; ?></td>
                     <td><?php echo $issue['owner']; ?></td>
                     <td><span class='severity-color' style="background-color:#<?php echo $issue['color']; ?>"><?php echo $issue['severity']; ?></span></td>
-                    <td><?php echo $issue['status']; ?></td>
-                    <td><?php echo $issue['date_added']; ?></td>
+                    <td id="issue_<?php echo $issue['id']; ?>"><span class='status-class' style='background-color:#<?php echo $issue['status_color']; ?>'><?php echo $issue['status']; ?></span></td>
+                    <td><?php echo date("M-d-Y h:i a",strtotime($issue['date_added'])); ?></td>
                 </tr>
                 <?php $row++; ?>
                 <?php endforeach; ?>
@@ -74,9 +84,11 @@
             $('#issue-page-container').animate({'top':'-1000px'});
         });
         
-        $('#new-issue, .button-link-issue').click(function(e){
+        $(document).delegate('#new-issue, .button-link-issue, #edit-button, #cancel-button','click',function(e){
         
             e.preventDefault();
+            
+            
             
             changeUrl($(this).attr('rel'));
             
@@ -86,7 +98,7 @@
         var load_issue = function(url){
             $('#issue-page-container').animate({'top':0});
                 
-            $('#issue-page-container #page-container-wrapper').append("<div class='loader-wrapper'><img src='<?php echo base_url(); ?>resources/images/ajax-loader.gif' /></div>");
+            $('#issue-page-container #page-container-wrapper').html("<div class='loader-wrapper'><img src='<?php echo base_url(); ?>resources/images/ajax-loader.gif' /></div>");
             
             $.ajax({
                 url : url,

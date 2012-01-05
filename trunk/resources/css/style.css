@@ -58,11 +58,12 @@ blockquote, q {
 /**
  * ### DEFAULT CSS THEME ###
  */
-
+.remove {background:url('../images/deletered.png') no-repeat; display:inline-block;height:16px; width:16px;}
+.err-message {border:1px solid #ff8000; padding:10px;display:block;margin:2px;text-align:center;background:#ffd9b3;}
 .clr { clear:both; }
 .flt-left {float:left;}
 .flt-right{float:right;}
-.status-class {float:left;padding:5px;border-radius:4px;color:#fff;}
+.status-class {padding:5px;border-radius:4px;color:#fff;}
 .severity-color {display: inline;padding:5px;border-radius:2px;}
 #wrapper #content-body
 .grid-pagination a,
@@ -88,6 +89,9 @@ blockquote, q {
     vertical-align: baseline;
 	color:#000;
 }
+a.button-link {
+	padding: 3px 3px;
+}
 #wrapper #content-body
 .grid-pagination a:active,
 .button-link:active {
@@ -95,9 +99,34 @@ blockquote, q {
 	 border-color: #AAAAAA;
 }
 
+#wrapper #footer .footer-text {
+	padding:5px;
+	text-align:right;
+	color:#fff;
+}
 
 #id {
     width:100%;
+}
+
+#wrapper #login-wrapper {
+	margin:auto;
+	width:250px;
+	display:block;
+	padding:10px;
+}
+
+#wrapper .form-login {
+	padding:10px;
+	border:1px solid #cacaca;
+}
+
+#wrapper .form-login table {
+	width:100%;
+}
+
+#wrapper .form-login table td {
+	padding:5px;
 }
 
 #wrapper .content-wrapper {
@@ -107,6 +136,7 @@ blockquote, q {
     font-size:11px;
 	position:relative;
 }
+
 
 #wrapper #blue-header {
     border-bottom:1px solid #0045C3;
@@ -258,6 +288,7 @@ blockquote, q {
 	position:absolute;
 	top:-1000px;
 	width:100%;
+	z-index: 1;
 }
 #issue-page-container #page-container-wrapper {
 	margin:auto;
@@ -295,7 +326,7 @@ blockquote, q {
 
 #issue-page-container #page-container-wrapper .column-container .left-column {
 	border-right:1px solid #e5e5e5;
-	width:580px;
+	width:568px;
 	min-height:200px;
 }
 
@@ -345,7 +376,8 @@ blockquote, q {
 .status-container {
 	overflow:auto;
 	min-height:400px;
-	width: 210px;
+	width: 218px;
+	max-height:535px;
 }
 
 #issue-page-container
@@ -403,7 +435,7 @@ blockquote, q {
 #issue-page-container
 #page-container-wrapper
 .issue-comment .issue-comment-box textarea {
-	width:550px;
+	width:535px;
 	height:18px;
 	resize:none;
 	border-radius:2px;
@@ -452,6 +484,17 @@ blockquote, q {
 .issue-comment-list
 .comment-content {
 	text-align:justify;
+}
+
+#issue-page-container
+#page-container-wrapper
+.attachment-container-box {
+	padding:5px;
+}
+#issue-page-container
+#page-container-wrapper
+.attachment-container-box {
+	vertical-align:middle;
 }
 
 /**

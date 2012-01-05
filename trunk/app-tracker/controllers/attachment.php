@@ -21,7 +21,7 @@ class Attachment extends CI_Controller {
             header("Content-Type: ".$attachment->type);
             header("Content-Transfer-Encoding: binary");
             
-            readfile(base_url().'resources/uploads/'.$attachment->file_name);
+            readfile(base_url().'resources/uploads/'.$attachment->md5_name);
                 
         } else {
             redirect('home');

@@ -1,2 +1,4 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed'); ?>
-Footer
+<div class='footer-text'>
+    Jekle Enterprises, LLP.
+</div>
