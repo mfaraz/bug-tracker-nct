@@ -18,6 +18,7 @@ class Ajax extends CI_Controller {
         $this->load->model('fact');
         
         $labels   = $this->fact->GetAllLabels( $this->input->post('q') );
+        
         echo json_encode($labels);
     }
     
@@ -25,15 +26,18 @@ class Ajax extends CI_Controller {
     {
         $this->load->model('user');
         
-        $users = $this->user->GetAll( $this->input->post('q') );
+        $users = $this->user->GetCC( $this->input->post('q') );
         
         $u_array = array();
         
-        foreach( $users as $u ) {
-            $u_array[] = array(
-                'id'    => $u['id'],
-                'name'  => $u['first_name'] . ' ' . $u['last_name']
-            );
+        if ( count($users) > 0 )
+        {
+            foreach( $users as $u ) {
+                $u_array[] = array(
+                    'id'    => $u['id'],
+                    'name'  => $u['first_name'] . ' ' . $u['last_name']
+                );
+            }
         }
         
         echo json_encode($u_array);
@@ -72,6 +76,111 @@ class Ajax extends CI_Controller {
             $comment = wordwrap(nl2br($this->input->post('issue_comment')),60,'&#8203;',true);
             
             echo json_encode( array('r'=>true,'id'=>$id,'comment'=>$comment,'user'=>'Ervin Musngi','date'=>date("F d, Y g:i a",strtotime($date)) ) );
+            
+        } else {
+            
+            echo json_encode( array('r'=>false,'m'=>validation_errors()) );
+                
+        }
+        
+    }
+    
+    public function deleteattachment()
+    {
+        $config = array(
+            array(
+                'field' => 'issue_id', 
+                'label' => 'lang:issue_id', 
+                'rules' => 'required|integer'
+            ),
+            array(
+                'field' => 'attachment_id',
+                'label' => 'lang:issue_attachment',
+                'rules' => 'required|integer'
+            )
+        );
+        
+        $this->form_validation->set_rules($config);
+        
+        if ( $this->form_validation->run() ) {
+            
+            $this->db->where('id',$this->input->post('issue_id'))->update('fact_attachments',array('is_active'=>0));
+            $this->db->where('issue_id',$this->input->post('issue_id'))->where('attachment_id',$this->input->post('attachment_id'))->delete('dim_issue_attachments');
+            echo json_encode( array('r'=>true) );
+            
+        } else {
+            echo json_encode( array('r'=>false,'m'=>validation_errors()) );
+        }
+    }
+    
+    public function deleteissue()
+    {
+        $config = array(
+            array(
+                'field' => 'issue_id', 
+                'label' => 'lang:issue_id', 
+                'rules' => 'required|integer'
+            )
+        );
+        
+        $this->form_validation->set_rules($config);
+        
+        if ( $this->form_validation->run() ) {
+            
+            $this->db->where('id',$this->input->post('issue_id'))->update('fact_issues',array('is_active'=>0));
+            
+            echo json_encode( array('r'=>true) );
+            
+        } else {
+            echo json_encode( array('r'=>false,'m'=>validation_errors()) );
+        }
+    }
+    
+    public function status()
+    {
+        $config = array(
+            array(
+                'field' => 'status_id', 
+                'label' => 'lang:issue_status', 
+                'rules' => 'required'
+            ),
+            array(
+                'field' => 'issue_id', 
+                'label' => 'lang:issue_id', 
+                'rules' => 'required|integer'
+            )
+        );
+        
+        $this->form_validation->set_rules($config);
+        
+        if ( $this->form_validation->run() ) {
+            
+            $this->load->model('fact');
+            $this->load->model('issue');
+            
+            $date = date("Y-m-d H:i:s");
+            
+            $data = array(
+                'issue_id'      => $this->input->post('issue_id'),
+                'status_id'     => $this->input->post('status_id'),
+                'user_id'       => 1,
+                'date_added'    => $date
+            );
+            
+            $this->issue->AddIssueStatus( $data );
+            
+            $status = $this->fact->GetStatusById( $this->input->post('status_id') );
+            
+            $status_info = array(
+                'id'            => $status->id,
+                'name'          => $status->name,
+                'date'          => date("F d, Y",strtotime($date)),
+                'complete_date' => date("F d, Y h:i a",strtotime($date)),
+                'description'   => $status->description,
+                'color'         => $status->color
+            );
+            
+            echo json_encode($status_info);
             
         } else {
             

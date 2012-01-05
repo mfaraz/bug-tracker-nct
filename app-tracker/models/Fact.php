@@ -108,4 +108,18 @@ class Fact extends CI_Model {
         return $type_array;
         
     }
+    
+    public function GetStatusById($id = 0)
+    {
+        
+        $result = $this->db->where('id',$id)->get('fact_status',1);
+        
+        if ( $result->num_rows() > 0 ) {
+            
+            return $result->row();
+            
+        } else {
+            
+        }
+    }
 }

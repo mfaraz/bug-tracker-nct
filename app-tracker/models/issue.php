@@ -12,7 +12,7 @@ class Issue extends CI_Model {
         $this->db->insert('fact_issues',$data['issue']);
         
         $issue_id =  $this->db->insert_id();
-        
+
         $data['status']['issue_id']         = $issue_id;
         $data['status']['date_added']       = $date;
         
@@ -33,8 +33,44 @@ class Issue extends CI_Model {
         
     }
     
+    public function UpdateIssue($issue_id = 0 , $data = array() )
+    {
+        $date = date("Y-m-d H:i:s");
+    
+        $data['issue']['date_modified']     = $date;
+        
+        $this->db->where('id',$issue_id)->update('fact_issues',$data['issue']);
+
+        $data['status']['issue_id']         = $issue_id;
+        $data['status']['date_added']       = $date;
+        
+        $this->AddIssueStatus( $data['status'] );
+        
+        $data['cc']['issue_id']             = $issue_id;
+        
+        $this->AddCC($data['cc']);
+        
+        $data['label']['issue_id']          = $issue_id;
+        
+        $this->AddLabels($data['label']);
+        
+        $data['attachment']['issue_id']     = $issue_id;
+        $data['attachment']['date_added']   = $date;
+        
+        $this->AddAttachment($data['attachment']);
+    }
+    
     public function AddIssueStatus( $data )
     {
+        $result = $this->db->where('issue_id',$data['issue_id'])->order_by('id','DESC')->get('dim_issue_statuses',1);
+        
+        if ( $result->num_rows() > 0)
+        {
+            if ( $result->row()->status_id == $data['status_id'] ) {
+                return;
+            }
+        }
+        
         $this->db->insert('dim_issue_statuses',$data);
     }
     
@@ -102,8 +138,24 @@ class Issue extends CI_Model {
     
     
     
-    public function GetAll($page, $limit)
+    public function GetAll($page, $limit, $search = 0)
     {
+        $where = '';
+        
+        if ( $search  )
+        {
+            $where = "AND ( fi.id LIKE '%{$search}%' OR    
+                            fi.summary LIKE '%{$search}%' OR
+                            fi.description LIKE '%{$search}%' OR
+                            fs.name LIKE '%{$search}%' OR
+                            fu.first_name LIKE '{$search}' OR
+                            ft.name LIKE '%{$search}%' OR
+                            status.name LIKE '%{$search}%' OR
+                            (SELECT COUNT(*) FROM dim_issue_labels as dl INNER JOIN fact_labels as fl on dl.label_id = fl.id where dl.issue_id = fi.id AND fl.name LIKE '%{$search}%' ) > 0
+                            )
+            ";
+            
+        }
         
         $sql = "
             SELECT
@@ -116,13 +168,22 @@ class Issue extends CI_Model {
             fi.date_added,
             ft.name AS 'type',
             fs.color,
-            
-            (SELECT fss.`name` FROM dim_issue_statuses AS ds INNER JOIN fact_status AS fss ON ds.status_id = fss.id WHERE ds.issue_id = fi.id ORDER BY ds.id DESC LIMIT 1) AS 'status'
+            status.name AS 'status',
+            status.color AS 'status_color'
             
             FROM fact_issues AS fi
             INNER JOIN fact_users AS fu ON fi.owner_id = fu.id
             INNER JOIN fact_severity AS fs ON fi.serevity_id = fs.id
+            
+            LEFT JOIN 
+            (SELECT ds.id,ds.issue_id,fss.name,fss.color FROM dim_issue_statuses AS ds INNER JOIN fact_status AS fss ON ds.status_id = fss.id ORDER BY ds.id DESC) AS `status` ON status.issue_id = fi.id
+            
             LEFT JOIN fact_types AS ft ON fi.type_id = ft.id
+            
+            WHERE
+            fi.is_active = 1
+            {$where}
+            GROUP BY fi.id
             ORDER BY fi.date_added DESC
             LIMIT {$page}, {$limit}
         ";
@@ -143,7 +204,8 @@ class Issue extends CI_Model {
                 'date_added'    => $issue->date_added,
                 'status'        => $issue->status,
                 'type'          => $issue->type,
-                'color'         => $issue->color
+                'color'         => $issue->color,
+                'status_color'  => $issue->status_color
             );
         }
         
@@ -151,12 +213,45 @@ class Issue extends CI_Model {
         
     }
     
-    public function GetTotalIssue()
+    public function GetTotalIssue($search = 0)
     {
+        $where = '';
         
-        $query = $this->db->select(" COUNT(*) AS `num`",false)->where('is_active',1)->get('fact_issues')->row();
+        if ( $search  )
+        {
+            $where = "AND ( fi.id LIKE '%{$search}%' OR    
+                            fi.summary LIKE '%{$search}%' OR
+                            fi.description LIKE '%{$search}%' OR
+                            fs.name LIKE '%{$search}%' OR
+                            fu.first_name LIKE '{$search}' OR
+                            ft.name LIKE '%{$search}%' OR
+                            status.name LIKE '%{$search}%' OR
+                            (SELECT COUNT(*) FROM dim_issue_labels as dl INNER JOIN fact_labels as fl on dl.label_id = fl.id where dl.issue_id = fi.id AND fl.name LIKE '%{$search}%' ) > 0
+                            )
+            ";
+        }
         
-        return $query->num;
+        $sql = "
+            SELECT
+            COUNT(*) as `num`
+            FROM fact_issues AS fi
+            INNER JOIN fact_users AS fu ON fi.owner_id = fu.id
+            INNER JOIN fact_severity AS fs ON fi.serevity_id = fs.id
+            
+            LEFT JOIN 
+            (SELECT ds.id,ds.issue_id,fss.name,fss.color FROM dim_issue_statuses AS ds INNER JOIN fact_status AS fss ON ds.status_id = fss.id ORDER BY ds.id DESC) AS `status` ON status.issue_id = fi.id
+            
+            LEFT JOIN fact_types AS ft ON fi.type_id = ft.id
+            
+            WHERE
+            fi.is_active = 1
+            {$where}
+            GROUP BY fi.id
+        ";
+        
+        $result = $this->db->query($sql);
+        
+        return $result->num_rows();
         
     }
     
@@ -173,7 +268,11 @@ class Issue extends CI_Model {
                 fs.name AS 'severity',
                 fi.date_added,
                 ft.name AS 'type',
-                fs.color
+                fs.color,
+                fs.id AS 'severity_id',
+                fi.owner_id,
+                fi.user_id,
+                fi.type_id
                 
                 FROM fact_issues AS fi
                 INNER JOIN fact_users AS fu ON fi.owner_id = fu.id
@@ -184,17 +283,21 @@ class Issue extends CI_Model {
         
         $row = $this->db->query($sql)->row();
         
-        $data = array(
-            'id'            => $row->id,
-            'summary'       => $row->summary,
-            'description'   => $row->description,
-            'owner_id'      => $row->owner_id,
-            'owner'         => $row->owner_f_name . ' '. $row->owner_l_name,
-            'severity'      => $row->severity,
-            'date_added'    => $row->date_added,
-            'type'          => $row->type,
-            'color'         => $row->color
-        );
+            $data = array(
+                'id'            => $row->id,
+                'summary'       => $row->summary,
+                'description'   => $row->description,
+                'owner_id'      => $row->owner_id,
+                'owner'         => $row->owner_f_name . ' '. $row->owner_l_name,
+                'severity'      => $row->severity,
+                'date_added'    => $row->date_added,
+                'type'          => $row->type,
+                'color'         => $row->color,
+                'severity_id'   => $row->severity_id,
+                'user_id'       => $row->user_id,
+                'type_id'       => $row->type_id
+                
+            );
         
         return $data;
         
@@ -203,9 +306,11 @@ class Issue extends CI_Model {
     public function GetStatus( $id = 0 )
     {
         $sql = "SELECT
-                *
+                *,
+                fs.id AS 'status_id'
                 FROM dim_issue_statuses AS ds
                 INNER JOIN fact_status AS fs ON ds.status_id = fs.id
+                INNER JOIN fact_users AS fu ON fu.id = ds.user_id
                 WHERE ds.issue_id = '{$id}' ORDER BY ds.id DESC";
                 
         $query = $this->db->query($sql);
@@ -214,7 +319,7 @@ class Issue extends CI_Model {
         
         foreach( $query->result() as $row )
         {
-            $status_array[] = array('name'=>$row->name,'description'=>$row->description,'color'=>$row->color,'date_added'=>date("F d, Y",strtotime($row->date_added)));
+            $status_array[] = array('id'=>$row->status_id,'user'=>$row->first_name . ' ' . $row->last_name,'name'=>$row->name,'description'=>$row->description,'color'=>$row->color,'complete_date'=>date("F d, Y h:i a",strtotime($row->date_added)),'date_added'=>date("F d, Y",strtotime($row->date_added)));
         }
         
         return $status_array;
@@ -274,9 +379,44 @@ class Issue extends CI_Model {
         
     } 
     
-    public function GetLabel( $id = 0 )
+    public function GetLabels( $id = 0 )
     {
         
+        $sql = "SELECT fl.id, fl.name FROM dim_issue_labels AS dl INNER JOIN fact_labels AS fl ON dl.label_id = fl.id WHERE dl.issue_id = '{$id}'";
+        
+        $result = $this->db->query($sql);
+        
+        $labels = array();
+        
+        foreach( $result->result() as $label )
+        {
+            $labels[] = array('id'=>$label->id,'name'=>$label->name);
+        }
+        
+        return $labels;
+        
+    }
+    
+    public function GetCC($id = 0)
+    {
+        $sql = "SELECT 
+                fu.id,
+                fu.first_name,
+                fu.last_name
+                FROM dim_issue_cc AS dc
+                INNER JOIN fact_users AS fu ON dc.user_id = fu.id
+                WHERE dc.issue_id = '{$id}' ";
+        
+        $result = $this->db->query($sql);
+        
+        $cc = array();
+        
+        foreach( $result->result() as $c )
+        {
+            $cc[] = array('id'=>$c->id,'name'=>$c->first_name. ' '.$c->last_name);
+        }
+        
+        return $cc;
     }
     
     public function GetAttachmentById($id = 0)
