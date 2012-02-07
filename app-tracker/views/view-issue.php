@@ -2,7 +2,7 @@
 <div id="">
     <div class='column-header'>
         <?php if ($issue['user_id'] == $this->session->userdata('id') ) : ?>
-            <?php echo $issue['id'] . '  : ' . $issue['summary'] ; ?> - [ <?php echo anchor('bugs/issue/'.$issue['id'].'/'.$page.'/edit','Edit','id="edit-button" rel="bugs/issue/'.$issue['id'].'/0/edit"'); ?> ] [ <?php echo anchor('bugs/issue/'.$issue['id'].'/'.$page.'/delete','Delete','id="delete-button" rel="'.$issue['id'].'"'); ?> ] - You Created This
+            <?php echo $issue['id'] . '  : ' . $issue['summary'] ; ?> - [ <?php echo anchor('bugs/issue/'.$issue['id'].'/'.$page.'/edit','Edit','id="edit-button" rel="bugs/issue/'.$issue['id'].'/0/edit"'); ?> ] [ <?php echo anchor('#','Delete','id="delete-button" rel="'.$issue['id'].'"'); ?> ] - You Created This
         <?php else : ?>
             <?php echo $issue['id'] . '  : ' . $issue['summary'] ; ?>
         <?php endif; ?>
@@ -56,7 +56,7 @@
                                     </div>
                                     <div class='comment-content'>
                                         <p>
-                                            <?php echo wordwrap(nl2br($com['comment']),60,'&#8203;',true); ?>
+                                            <?php echo wordwrap(nl2br($com['comment']),80,'<br/>',true); ?>
                                         </p>
                                     </div>
                                 </li>
@@ -170,34 +170,7 @@
             }
         });
         
-        $('#delete-button').click(function(e){
-            
-            e.preventDefault();
-            
-            var del = confirm("Are you sure you want to delete the current issue?");
-            
-            if ( del )
-            {
-                $.ajax({
-                    url : '<?php echo site_url('ajax/deleteissue/'); ?>',
-                    type: 'POST',
-                    data: 'issue_id=<?php echo $issue['id']; ?>',
-                    dataType: 'JSON',
-                    success: function(obj){
-                        
-                        if ( obj.r == true )
-                        {
-                            $('#list-<?php echo $issue['id']; ?>').remove();
-                        }
-                        
-                        $('#close-issue-page').trigger('click');
-                    }
-                });
-            }
-            
-            return false;
-             
-        });
+       
         
         $('#status-button').click(function(){
             

@@ -9,13 +9,20 @@ class Home extends CI_Controller {
             ->set_partial('header', 'partials/header')
             ->set_partial('blue_header','partials/blue-header')
             ->set_partial('footer','partials/footer');
+        
     }
     
     public function index()
     {
         try
         {
+            if ($this->session->userdata('id') != false )
+            {
+                redirect('bugs');
+                exit();
+            }
             
+            $this->lang->load('user');
             $this->template
                     ->title('Sassy Dumpling', 'Bug Tracker | Home')
                     ->build('home');
@@ -32,7 +39,8 @@ class Home extends CI_Controller {
             'id'            => '',
             'first_name'    => '',
             'last_name'     => '',
-            'email'         => ''
+            'email'         => '',
+            'is_admin'      => ''
         );
         
         $this->session->unset_userdata($data);
@@ -42,6 +50,12 @@ class Home extends CI_Controller {
     
     public function login( $authenticate = false )
     {
+        if ($this->session->userdata('id') != false )
+        {
+            redirect('bugs');
+            exit();
+        }
+        
         $this->lang->load('user');
         
         if ( $authenticate != false )
@@ -68,7 +82,7 @@ class Home extends CI_Controller {
                 
                 $data = array(
                     'username'  => $this->input->post('username'),
-                    'password'  => $this->input->post('password')
+                    'password'  => md5(sha1($this->input->post('password')))
                 );
                 
                 $user = $this->user->Authenticate($data);
@@ -83,13 +97,13 @@ class Home extends CI_Controller {
             }
             
             $this->session->set_flashdata('msg',lang('user_invalid'));
-            redirect('home/login');
+            redirect('home');
             
         }
 
         $this->template
                     ->title('Sassy Dumpling', 'Bug Tracker | Login')
-                    ->build('login');
+                    ->build('home');
     }
     
 }

@@ -10,6 +10,10 @@ class Bugs extends CI_Controller {
         $this->load->helper('ajaxify');
         
         $this->_limit = 20;
+        
+        if ( ! $this->session->userdata('id') ) {
+            redirect('home');
+        }
     }
     
     public function index()
@@ -190,7 +194,7 @@ class Bugs extends CI_Controller {
         
         
         $this->load->model('issue');
-        
+        $this->load->model('user');
         $this->lang->load('form');
         
         $config = array(
@@ -255,7 +259,35 @@ class Bugs extends CI_Controller {
                 'attachment'    => array('attach'   =>$this->_upload_files())
             );
             
-            $this->issue->AddIssue($data);
+            $issue_id = $this->issue->AddIssue($data);
+            
+            $user = $this->user->GetById($this->input->post('issue_owner'));
+            
+            $issue_data['attachment']     = $this->issue->GetAttachment( $issue_id );
+            $issue_data['comment']        = $this->issue->GetComment( $issue_id );
+            $issue_data['label']          = $this->issue->GetLabels($issue_id);
+            $issue_data['cc']             = $this->issue->GetCC($issue_id);
+            $issue_data['issue']          = $this->issue->GetIssue( $issue_id );
+            $issue_data['status']         = $this->issue->GetStatus( $issue_id );
+            
+            $this->load->library('email');
+            
+            $this->email->initialize(array('mailtype'=>'html'));
+            
+            $this->email->from('bugs@sassydumpling.com', 'SassyDumpling Bug Tracker');
+            
+            $this->email->to($user['email']);
+            
+            foreach( $issue_data['cc'] as $c  )
+            {
+                $this->email->cc($c['email']);
+            }
+            
+            $this->email->subject('New issue created on SassyDumpling Bug Tracker');
+            $this->email->message($this->load->view('email/new-issue',$issue_data,true));
+            $this->email->send();
+            
+            $this->session->set_flashdata('msg','Successfully created new Issue!');
             
             redirect('bugs');
             
@@ -265,8 +297,26 @@ class Bugs extends CI_Controller {
         
     }
     
+    public function sample_email()
+    {
+        //$this->load->model('issue');
+        //$this->lang->load('form');
+        //$issue_id = '10003';
+        //
+        //$issue_data['attachment']     = $this->issue->GetAttachment( $issue_id );
+        //$issue_data['comment']        = $this->issue->GetComment( $issue_id );
+        //$issue_data['label']          = $this->issue->GetLabels($issue_id);
+        //$issue_data['cc']             = $this->issue->GetCC($issue_id);
+        //$issue_data['issue']          = $this->issue->GetIssue( $issue_id );
+        //$issue_data['status']                 = $this->issue->GetStatus( $issue_id );
+        //$this->load->view('email/new-issue',$issue_data);
+        
+    }
+    
     public function update( $issue_id = 0 )
     {
+       
+        
         $this->load->model('issue');
         
         $this->lang->load('form');
@@ -328,7 +378,6 @@ class Bugs extends CI_Controller {
                                     'type_id'       => $this->input->post('issue_type'),
                                     'user_id'       => $this->session->userdata('id')
                                 ),
-                
                 'status'        => array('status_id'=>$this->input->post('issue_status'),'user_id'=>1),
                 'cc'            => array('user_id'  =>$issue_cc),
                 'label'         => array('label'    =>$issue_label),

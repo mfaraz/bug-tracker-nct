@@ -7,13 +7,15 @@
     <div class="form-container">
         <?php echo form_open('bugs/insert','enctype="multipart/form-data"'); ?>
         <table>
+        <tr>
+            <td colspan="2">
+                <?php echo validation_errors('<div class="error-container">','</div>'); ?>
+            </td>
+        </tr>
             
         <tr>
             <td><?php echo lang('issue_summary'); ?></td>
             <td><input type='text' autocomplete="off" required="required" name='issue_summary' value='<?php echo set_value('issue_summary'); ?>' class="input-min-width" /></td>
-            <td rowspan="9">
-                <?php echo validation_errors('<div class="error-container">','</div>'); ?>
-            </td>
         </tr>
         
         <tr>
@@ -28,7 +30,7 @@
         
         <tr>
             <td></td>
-            <td><span id="attach-file">Attach file</span></td>
+            <td><span id="attach-file" class="button-link">Attach file</span></td>
         </tr>
         <tr>
             <td><?php echo lang('issue_type'); ?></td>
@@ -146,7 +148,10 @@
                 
                 $('<div>').append(
                     $('<input>').attr({'type':'file','name':'issue_attachment'+attachment}),
-                    $('<span>').html('remove').bind('click',function(){
+                    $('<a href="#" title="Remove">').addClass('button-link').html(
+                        $('<span>').addClass('icon delete-icon')
+                    ).bind('click',function(e){
+                        e.preventDefault();
                         $(this).parent().remove();
                     })
                 )
