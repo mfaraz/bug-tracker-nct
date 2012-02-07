@@ -24,7 +24,68 @@ class User extends CI_Model {
                     'id'            => $user_row->id,
                     'first_name'    => $user_row->first_name,
                     'last_name'     => $user_row->last_name,
-                    'email'         => $user_row->email
+                    'email'         => $user_row->email,
+                    'is_admin'      => $user_row->is_admin
+                );
+                
+                return $user;
+                
+            } else {
+                return false;
+            }
+            
+        }
+        catch(Exception $e)
+        {
+            throw $e;
+        }
+        
+    }
+    
+    public function checkEmail( $id = 0 , $email = '' )
+    {
+        try
+        {
+            
+            $query = $this->db->where('id !=',$id)->where('email',$email)->get('fact_users',1);
+            
+            if ( $query->num_rows() > 0 )
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+            
+        }
+        catch(Exception $e)
+        {
+            throw $e;
+        }
+    }
+    
+    public function GetById( $id = 0 )
+    {
+        try
+        {
+            
+            $this->db->where('id',$id);
+                        $result = $this->db->get('fact_users',1);
+            
+            $user = array();
+            
+            if ( $result->num_rows() > 0 ) {
+                
+                $user_row = $result->row();
+                
+                $user = array(
+                    
+                    'id'            => $user_row->id,
+                    'first_name'    => $user_row->first_name,
+                    'last_name'     => $user_row->last_name,
+                    'email'         => $user_row->email,
+                    'is_admin'      => $user_row->is_admin
                 );
                 
                 return $user;
@@ -106,4 +167,70 @@ class User extends CI_Model {
         }
     }
     
+    public function GetTotalUser($search = null)
+    {
+        if ( $search )
+        {
+            $this->db->or_like('first_name',$search)->or_like('last_name',$search)->or_like('email',$search);
+        }
+        
+        $query = $this->db->select(' COUNT(*) AS `num` ', false)->where('is_active',1)->get('fact_users');
+        
+        return $query->row()->num;
+    }
+    
+    public function GetAllListing($page = 0, $limit = 20, $search = null)
+    {
+        
+        if ( $search )
+        {
+            $this->db->or_like('first_name',$search)->or_like('last_name',$search)->or_like('email',$search);
+        }
+        
+        
+        $query = $this->db->where('is_active',1)->get('fact_users',$limit,$page);
+        
+        $users = array();
+        
+        foreach( $query->result() as $u )
+        {
+            
+            $users[] = array(
+                'id'            => $u->id,
+                'first_name'    => $u->first_name,
+                'last_name'     => $u->last_name,
+                'email'         => $u->email,
+                'is_admin'      => $u->is_admin
+            );
+            
+        }
+        
+        return $users;
+        
+        
+    }
+    
+    
+    public function insert( $data = array() )
+    {
+        
+        if ( !is_array($data) )
+        {
+            return false;
+        }
+        
+        
+        $this->db->insert('fact_users',$data);
+        
+    }
+    
+    public function update( $id, $data = array() )
+    {
+        if ( !is_array($data) )
+        {
+            return false;
+        }
+        
+        $this->db->where('id',$id)->update('fact_users',$data);
+    }
 }

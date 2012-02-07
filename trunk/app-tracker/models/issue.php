@@ -31,6 +31,8 @@ class Issue extends CI_Model {
         
         $this->AddAttachment($data['attachment']);
         
+        return $issue_id;
+        
     }
     
     public function UpdateIssue($issue_id = 0 , $data = array() )
@@ -67,11 +69,13 @@ class Issue extends CI_Model {
         if ( $result->num_rows() > 0)
         {
             if ( $result->row()->status_id == $data['status_id'] ) {
-                return;
+                return false;
             }
         }
         
         $this->db->insert('dim_issue_statuses',$data);
+        
+        return true;
     }
     
     public function AddCC( $data )
@@ -265,6 +269,7 @@ class Issue extends CI_Model {
                 fu.id AS 'owner_id',
                 fu.first_name AS 'owner_f_name',
                 fu.last_name AS 'owner_l_name',
+                fu.email AS 'owner_email',
                 fs.name AS 'severity',
                 fi.date_added,
                 ft.name AS 'type',
@@ -289,6 +294,7 @@ class Issue extends CI_Model {
                 'description'   => $row->description,
                 'owner_id'      => $row->owner_id,
                 'owner'         => $row->owner_f_name . ' '. $row->owner_l_name,
+                'owner_email'   => $row->owner_email,
                 'severity'      => $row->severity,
                 'date_added'    => $row->date_added,
                 'type'          => $row->type,
@@ -402,7 +408,8 @@ class Issue extends CI_Model {
         $sql = "SELECT 
                 fu.id,
                 fu.first_name,
-                fu.last_name
+                fu.last_name,
+                fu.email
                 FROM dim_issue_cc AS dc
                 INNER JOIN fact_users AS fu ON dc.user_id = fu.id
                 WHERE dc.issue_id = '{$id}' ";
@@ -413,7 +420,7 @@ class Issue extends CI_Model {
         
         foreach( $result->result() as $c )
         {
-            $cc[] = array('id'=>$c->id,'name'=>$c->first_name. ' '.$c->last_name);
+            $cc[] = array('id'=>$c->id,'name'=>$c->first_name. ' '.$c->last_name,'email'=>$c->email);
         }
         
         return $cc;

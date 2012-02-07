@@ -21,12 +21,19 @@
         </div>
         <div class='clr'></div>
     </div>
-    
+    <?php if ( $this->session->flashdata('msg') )  :?>
+    <div class='err-message'>
+        <?php echo $this->session->flashdata('msg'); ?>
+    </div>
+    <?php endif; ?>
     
     <div id='grid-container'>
         <table id="issue-grid">
             <thead>
                 <tr>
+                    <?php if ( $this->session->userdata('is_admin') ) : ?>
+                    <th style="width:70px;"></th>
+                    <?php endif; ?>
                     <th><?php echo lang('issue_id'); ?></th>
                     <th><?php echo lang('issue_type'); ?></th>
                     <th><?php echo lang('issue_summary'); ?></th>
@@ -40,7 +47,13 @@
                 <?php $row = 0 ; ?>
                 <?php foreach( $issues as $issue ) : ?>
                 <tr id='list-<?php echo $issue['id']; ?>' class="<?php echo ( $row % 2 ) ? 'even' : 'odd'; ?>">
-                    <td><a href="<?php echo site_url('bugs/issue/'.$issue['id'].'/'.$currentpage); ?>" rel="<?php echo 'bugs/issue/'.$issue['id'].'/'.$currentpage; ?>" class="button-link-issue"><?php echo $issue['id']; ?></a></td>
+                    <?php if ( $this->session->userdata('is_admin') ) : ?>
+                    <td>
+                        <a href="<?php echo site_url('bugs/issue/'.$issue['id'].'/'.$currentpage.'/edit'); ?>" rel="<?php echo 'bugs/issue/'.$issue['id'].'/'.$currentpage.'/edit'; ?>" class="button-link button-link-issue" title="Edit"><span class="icon edit-icon"></span></a>
+                        <a href="#" class="button-link delete-button" rel="<?php echo $issue['id']; ?>"><span class="icon delete-icon"></span></a>
+                    </td>
+                    <?php endif; ?>
+                    <td><a href="<?php echo site_url('bugs/issue/'.$issue['id'].'/'.$currentpage); ?>" rel="<?php echo 'bugs/issue/'.$issue['id'].'/'.$currentpage; ?>" class="button-link button-link-issue" title="Delete"><?php echo $issue['id']; ?></a></td>
                     <td><?php echo $issue['type']; ?></td>
                     <td><?php echo $issue['summary']; ?></td>
                     <td><?php echo $issue['owner']; ?></td>
@@ -59,87 +72,29 @@
     </div>
 </div>
 <script>
-    
-    $(document).ready(function(){
-        
-        window.onpopstate = function(event) {
-            if ( window.location != '<?php echo site_url($originalUrl); ?>' && window.location != '<?php echo site_url($originalUrl); ?>/'){
-                load_issue(window.location);
-            } else {
-                if ( '' == '<?php echo (isset($issue_view)) ? 'true' : ''; ?>') {
-                    $('#issue-page-container').animate({'top':'-1000px'});
-                }
-            }
-            
-        };
-         
-        $(document).delegate('#close-issue-page','click',function(e){
-            e.preventDefault();
-            
-            if (history.pushState) {
-                changeUrl( $(this).attr('rel') )
-            } else {
-                window.location.hash="#";
-            }
-            $('#issue-page-container').animate({'top':'-1000px'});
-        });
-        
-        $(document).delegate('#new-issue, .button-link-issue, #edit-button, #cancel-button','click',function(e){
-        
-            e.preventDefault();
-            
-            
-            
-            changeUrl($(this).attr('rel'));
-            
-            load_issue($(this).attr('href'));
-        });
-        
-        var load_issue = function(url){
-            $('#issue-page-container').animate({'top':0});
-                
-            $('#issue-page-container #page-container-wrapper').html("<div class='loader-wrapper'><img src='<?php echo base_url(); ?>resources/images/ajax-loader.gif' /></div>");
+ $('.delete-button').click(function(e){
+        e.preventDefault();
+        var del = confirm("Are you sure you want to delete the current issue?");
+        if ( del )
+        {
+            var id = $(this).attr('rel');
             
             $.ajax({
-                url : url,
-                data : 'p_url=<?php echo $originalUrl; ?>',
+                url : '<?php echo site_url('ajax/deleteissue/'); ?>',
                 type: 'POST',
-                success:function(obj) {
-                    $('#page-container-wrapper').html(obj);
+                data: 'issue_id='+id,
+                dataType: 'JSON',
+                success: function(obj){
+                    
+                    if ( obj.r == true )
+                    {
+                        $('#list-'+id).remove();
+                    }
+                    
+                    $('#close-issue-page').trigger('click');
                 }
             });
-        };
-        
-
-        var changeUrl = function( url ) {
-            
-            if (!history.pushState) { //Compatability check
-                
-                window.location.hash = url
-                
-            } else {
-                var stateObj = { type: url }; 
-                history.pushState(stateObj, "Title", "<?php echo base_url(); ?>"+url);
-            }
-
         }
-       
+        return false;
     });
-    
 </script>
-
-<!-- [if IE]>  Firefox and others will use outer object -->
-<script>
-
-    $(document).ready(function(){
-        
-        var hash = window.location.hash.substring(1);
-        if ( hash != '' )
-        {
-            load_issue('<?php echo base_url(); ?>'+hash);
-        }
-            
-    });
-    
-</script>
-<!--<![endif]-->

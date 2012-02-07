@@ -28,7 +28,9 @@
                     <?php foreach( $attachment as $at ) : ?>
                     <div class='attachment-container-box'>
                     <span><?php echo $at['name']; ?></span>
-                    <span class='remove' title='Remove' rel='<?php echo $at['id']; ?>'></span>
+                    <a href="#" class="button-link remove" rel='<?php echo $at['id']; ?>'> 
+                        <span class='icon delete-icon' title='Remove' ></span>
+                    </a>
                     </div>
                     <?php endforeach; ?>
                 </td>
@@ -42,7 +44,7 @@
         
         <tr>
             <td></td>
-            <td><span id="attach-file">Attach file</span></td>
+            <td><span id="attach-file" class="button-link">Attach file</span></td>
         </tr>
         <tr>
             <td><?php echo lang('issue_type'); ?></td>
@@ -160,15 +162,18 @@
                 
                 $('<div>').append(
                     $('<input>').attr({'type':'file','name':'issue_attachment'+attachment}),
-                    $('<span>').html('remove').bind('click',function(){
+                    $('<a href="#" title="Remove">').addClass('button-link').html(
+                        $('<span>').addClass('icon delete-icon')
+                    ).bind('click',function(e){
+                        e.preventDefault();
                         $(this).parent().remove();
                     })
                 )
             );
         });
         
-        $('.remove').click(function(){
-            
+        $('.remove').click(function(e){
+            e.preventDefault();
             var a_id = $(this).attr('rel');
             var form = $(this);
             $.ajax({

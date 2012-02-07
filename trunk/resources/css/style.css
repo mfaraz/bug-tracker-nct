@@ -58,9 +58,12 @@ blockquote, q {
 /**
  * ### DEFAULT CSS THEME ###
  */
+.html5logo {/*height:200px; width:100px;*/}
+.display-none {display:none;}
 .remove {background:url('../images/deletered.png') no-repeat; display:inline-block;height:16px; width:16px;}
-.err-message {border:1px solid #ff8000; padding:10px;display:block;margin:2px;text-align:center;background:#ffd9b3;}
+.err-message {border:1px solid #0080c0; padding:10px;display:block;margin:2px;text-align:center;background:#e1f5ff;}
 .clr { clear:both; }
+.align-center {text-align:center;}
 .flt-left {float:left;}
 .flt-right{float:right;}
 .status-class {padding:5px;border-radius:4px;color:#fff;}
@@ -92,6 +95,13 @@ blockquote, q {
 a.button-link {
 	padding: 3px 3px;
 }
+
+#wrapper #content-body
+#search-result-box {
+	padding:5px;
+	font-size:15px;
+}
+
 #wrapper #content-body
 .grid-pagination a:active,
 .button-link:active {
@@ -111,14 +121,20 @@ a.button-link {
 
 #wrapper #login-wrapper {
 	margin:auto;
-	width:250px;
+	width:270px;
 	display:block;
+}
+#wrapper #create-account-wrapper {
+	width:630px;
+	background-color:#fff;
+}
+#wrapper #create-account-wrapper img {
 	padding:10px;
 }
-
 #wrapper .form-login {
 	padding:10px;
-	border:1px solid #cacaca;
+	border-right:1px solid #b2b2b2;
+	width:250px;
 }
 
 #wrapper .form-login table {
@@ -185,17 +201,26 @@ a.button-link {
 
 #wrapper #content-body #body-header {
 	border-bottom:1px solid #003e5b;
-	height:200px;
+	height:130px;
 	background-color:#006291;
 }
 #wrapper #content-body #body-header h6 {
 	font-size:25px;
 	font-weight:bold;
-	color:#fff;
+	color:#caeeff;
 	padding:10px;
+	padding-top:20px;
 }
+#wrapper #content-body #body-header p {
+	font-size:15px;
+	color:#fff;
+	padding:20px;
+	text-align:justify;
+}
+
 #wrapper #content-body #body-white {
 	background-color:#ebebeb;
+	
 }
 
 #wrapper #content-body #body-white .form-container {
@@ -251,7 +276,7 @@ a.button-link {
 	
 	border-collapse:collapse;
 	width:100%;
-	background-color:#ebebeb;
+	background-color:#efefef;
 	
 }
 
@@ -259,12 +284,13 @@ a.button-link {
 	background-color:#fff;
 }
 
-#wrapper #content-body #issue-grid tr:hover {
-	background-color:#b3e7ff;
+#wrapper #content-body #issue-grid tbody tr:hover {
+	background-color:#cdcdcd;
 }
 
 #wrapper #content-body #issue-grid thead {
 	background:-moz-linear-gradient(center top , #FFFFFF, #dfdfdf) repeat scroll 0 0 transparent;
+	background:-webkit-gradient(linear,0% 40%,0% 70%,from(#F9F9F9),to(#E3E3E3));
 	border-left:1px solid #cacaca;
 	border-right:1px solid #cacaca;
 }
@@ -317,7 +343,7 @@ a.button-link {
 
 #issue-page-container #page-container-wrapper .column-header {
 	padding:10px;
-	font-size:15px;
+	font-size:10px;
 	color:#646464;
 	border-bottom:1px solid #b4b4b4;
 	background:-webkit-gradient(linear,0% 40%,0% 70%,from(#F9F9F9),to(#E3E3E3));
@@ -325,9 +351,10 @@ a.button-link {
 }
 
 #issue-page-container #page-container-wrapper .column-container .left-column {
-	border-right:1px solid #e5e5e5;
+	border-right:1px solid #c5c5c5;
 	width:568px;
 	min-height:200px;
+	background-color:#fcfcfc;
 }
 
 #issue-page-container
@@ -499,6 +526,20 @@ a.button-link {
 
 /**
  * ### END DEFAULT CSS THEME ###
+ */
+
+
+
+/**
+ * ## CSS ICONS ##
+ */
+
+.icon {display:inline-block;width:16px;height:16px;}
+
+span.edit-icon { background:url('../images/icons/edit.png') no-repeat; }
+span.delete-icon { background:url('../images/icons/delete.png') no-repeat; }
+/**
+ * ## END CSS ICONS ##
  */
 
 

@@ -66,7 +66,7 @@ class Ajax extends CI_Controller {
             $this->load->model('issue');
             $date = date("Y-m-d H:i:s");
             $data = array(
-                'user_id'   => 1,
+                'user_id'   => $this->session->userdata('id'),
                 'comment'   => $this->input->post('issue_comment'),
                 'date_added'=> $date,
                 'issue_id'  => $this->input->post('issue_id')
@@ -75,7 +75,38 @@ class Ajax extends CI_Controller {
             $id = $this->issue->AddComment( $data );
             $comment = wordwrap(nl2br($this->input->post('issue_comment')),60,'&#8203;',true);
             
-            echo json_encode( array('r'=>true,'id'=>$id,'comment'=>$comment,'user'=>'Ervin Musngi','date'=>date("F d, Y g:i a",strtotime($date)) ) );
+            $name = $this->session->userdata('first_name'). ' ' . $this->session->userdata('last_name');
+            
+            $issue_id = $this->input->post('issue_id');
+            
+            $e_data['name']     = $name;
+            $e_data['date']     = $date;
+            $e_data['issue_id'] = $issue_id;
+            $e_data['comment']  = $comment;
+            
+            $cc                 = $this->issue->GetCC($issue_id);
+            $issue              = $this->issue->GetIssue( $issue_id );
+            
+            $this->load->library('email');
+            
+            $this->email->initialize(array('mailtype'=>'html'));
+            
+            $this->email->from('bugs@sassydumpling.com', 'SassyDumpling Bug Tracker');
+            
+            $this->email->to($issue['owner_email']);
+
+            foreach( $cc as $c  )
+            {
+                if ( $this->session->userdata('id') != $c['id'] ) {
+                    $this->email->cc($c['email']);
+                }
+            }
+            
+            $this->email->subject('New Comment on Issue #'.$issue_id);
+            $this->email->message($this->load->view('email/new-comment',$e_data,true));
+            $this->email->send();
+            
+            echo json_encode( array('r'=>true,'id'=>$id,'comment'=>$comment,'user'=>$name,'date'=>date("F d, Y g:i a",strtotime($date)) ) );
             
         } else {
             
@@ -156,6 +187,7 @@ class Ajax extends CI_Controller {
         if ( $this->form_validation->run() ) {
             
             $this->load->model('fact');
+            $this->load->model('user');
             $this->load->model('issue');
             
             $date = date("Y-m-d H:i:s");
@@ -163,24 +195,57 @@ class Ajax extends CI_Controller {
             $data = array(
                 'issue_id'      => $this->input->post('issue_id'),
                 'status_id'     => $this->input->post('status_id'),
-                'user_id'       => 1,
+                'user_id'       => $this->session->userdata('id'),
                 'date_added'    => $date
             );
             
-            $this->issue->AddIssueStatus( $data );
+            $res = $this->issue->AddIssueStatus( $data );
             
-            $status = $this->fact->GetStatusById( $this->input->post('status_id') );
-            
-            $status_info = array(
-                'id'            => $status->id,
-                'name'          => $status->name,
-                'date'          => date("F d, Y",strtotime($date)),
-                'complete_date' => date("F d, Y h:i a",strtotime($date)),
-                'description'   => $status->description,
-                'color'         => $status->color
-            );
-            
-            echo json_encode($status_info);
+            if ($res)
+            {
+                $status = $this->fact->GetStatusById( $this->input->post('status_id') );
+                
+                $status_info = array(
+                    'id'            => $status->id,
+                    'user'          => $this->session->userdata('first_name') . ' ' . $this->session->userdata('last_name'),
+                    'name'          => $status->name,
+                    'date'          => date("F d, Y",strtotime($date)),
+                    'complete_date' => date("F d, Y h:i a",strtotime($date)),
+                    'description'   => $status->description,
+                    'color'         => $status->color
+                );
+                
+                $issue_id = $this->input->post('issue_id');
+                
+                $s_data = $status_info;
+                
+                $s_data['issue_id'] = $issue_id;
+                
+                $cc                 = $this->issue->GetCC($issue_id);
+                $issue              = $this->issue->GetIssue( $issue_id );
+                
+                $this->load->library('email');
+                
+                $this->email->initialize(array('mailtype'=>'html'));
+                
+                $this->email->from('bugs@sassydumpling.com', 'SassyDumpling Bug Tracker');
+                
+    
+                $this->email->to($issue['owner_email']);
+    
+                foreach( $cc as $c  )
+                {
+                    if ( $this->session->userdata('id') != $c['id'] ) {
+                        $this->email->cc($c['email']);
+                    }
+                }
+                
+                $this->email->subject('Status updated on Issue #'.$issue_id);
+                $this->email->message($this->load->view('email/new-status',$s_data,true));
+                $this->email->send();
+                
+                echo json_encode($status_info);
+            }
             
         } else {
             
