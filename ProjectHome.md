@@ -1,0 +1,1 @@
+Initial framework for bug tracking
